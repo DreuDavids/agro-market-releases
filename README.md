@@ -13,6 +13,6 @@ Source code: private [`NexIT-Africa/nexit-digital-agro-platform`](https://github
 
 ## How releases are published
 
-Use **Actions â†’ Release Android APK** in *this* repo (workflow_dispatch). It checks out the private source with `SOURCE_REPO_TOKEN`, builds the APK, and publishes a GitHub Release here.
+Use **Actions’ Release Android APK** in *this* repo (workflow_dispatch). It checks out the private source with `SOURCE_REPO_TOKEN`, builds the APK, and publishes a GitHub Release here.
 
-Secrets for that workflow live in **this** repoâ€™s Settings (not the NexIT org repo).
+Secrets for that workflow live in **this** repo™s Settings (not the NexIT org repo).
