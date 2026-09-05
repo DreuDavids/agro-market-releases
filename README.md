@@ -2,7 +2,7 @@
 
 Public APK downloads for **AgroMarket** (Digital Agro Platform).
 
-Source code lives in the private repo [`NexIT-Africa/nexit-digital-agro-platform`](https://github.com/NexIT-Africa/nexit-digital-agro-platform).
+Source code: private [`NexIT-Africa/nexit-digital-agro-platform`](https://github.com/NexIT-Africa/nexit-digital-agro-platform).
 
 ## Install
 
@@ -13,8 +13,6 @@ Source code lives in the private repo [`NexIT-Africa/nexit-digital-agro-platform
 
 ## How releases are published
 
-GitHub Actions in the private source repo builds a release APK when a version tag (e.g. `v1.0.0`) is pushed, then uploads it here.
+Use **Actions â†’ Release Android APK** in *this* repo (workflow_dispatch). It checks out the private source with `SOURCE_REPO_TOKEN`, builds the APK, and publishes a GitHub Release here.
 
-In-app update checks read version metadata from Supabase (`app_releases`) and open the APK URL from these releases.
-
-> Prefer transferring this repo to `NexIT-Africa` when an org admin is available; update `RELEASES_REPO` in the source workflow accordingly.
+Secrets for that workflow live in **this** repoâ€™s Settings (not the NexIT org repo).
