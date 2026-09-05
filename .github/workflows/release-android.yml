@@ -1,0 +1,89 @@
+name: Release Android APK
+
+# Runs from DreuDavids/agro-market-releases (you control Settings/secrets here).
+# Checks out the private AgroMarket source, builds the APK, publishes a Release on this repo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      source_ref:
+        description: 'Source git ref to build (branch, tag, or SHA)'
+        required: true
+        default: 'main'
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_REPO: NexIT-Africa/nexit-digital-agro-platform
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          ref: ${{ inputs.source_ref }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Read version from pubspec
+        id: version
+        working-directory: source/apps/mobile
+        run: |
+          VERSION_LINE=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          VERSION_NAME="${VERSION_LINE%%+*}"
+          BUILD_NUMBER="${VERSION_LINE##*+}"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        working-directory: source/apps/mobile
+        run: flutter pub get
+
+      - name: Test
+        working-directory: source/apps/mobile
+        run: flutter test
+
+      - name: Build release APK
+        working-directory: source/apps/mobile
+        run: |
+          flutter build apk --release \
+            --build-name="${{ steps.version.outputs.name }}" \
+            --build-number="${{ steps.version.outputs.build }}" \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Publish release on this repo
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: AgroMarket ${{ inputs.tag }}
+          token: ${{ github.token }}
+          body: |
+            ## AgroMarket ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }})
+
+            Built from `${{ env.SOURCE_REPO }}` @ `${{ inputs.source_ref }}`.
+
+            ### Install
+            Download `app-release.apk` below and install on Android (enable "Install unknown apps" if prompted).
+
+            ### After publishing
+            Update Supabase `app_releases` with:
+            - `version_name`: `${{ steps.version.outputs.name }}`
+            - `build_number`: `${{ steps.version.outputs.build }}`
+            - `apk_url`: `https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/app-release.apk`
+          files: source/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          draft: false
+          prerelease: false
